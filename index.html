@@ -2,71 +2,425 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AutoPay Interface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Balance Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: linear-gradient(135deg, #f0f2f5 0%, #e4e7ec 100%); color: #333; min-height: 100vh; padding: 20px; display: flex; flex-direction: column; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
-        .badge { background: white; border-radius: 20px; padding: 10px 15px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
-        .badge.currency::before { content: "¥"; margin-right: 5px; color: #ff9500; font-weight: bold; }
-        .badge.balance::before { content: "💰"; margin-right: 5px; }
-        .container { flex-grow: 1; display: flex; flex-direction: column; gap: 20px; }
-        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); transition: all 0.3s ease; display: flex; align-items: center; }
-        .card:active { transform: scale(0.98); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
-        .card-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-right: 20px; font-size: 24px; color: white; }
-        .card:nth-child(2) .card-icon { background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); }
-        .card-content { flex-grow: 1; }
-        .card-title { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
-        .card-desc { font-size: 14px; color: #777; opacity: 0.8; }
-        .arrow { font-size: 24px; color: #ccc; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
-        .pulse { animation: pulse 2s infinite; }
-        @media (prefers-color-scheme: dark) {
-            body { background: linear-gradient(135deg, #121212 0%, #000 100%); color: #f0f0f0; }
-            .badge, .card { background: #1e1e1e; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); }
-            .card-desc { color: #aaa; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(25, 25, 45, 0.8);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        
+        .info-box {
+            background: rgba(45, 45, 75, 0.7);
+            border-radius: 18px;
+            padding: 15px 25px;
+            width: 48%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, background 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-box:hover {
+            transform: translateY(-5px);
+            background: rgba(55, 55, 95, 0.8);
+        }
+        
+        .info-title {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .action-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .action-box {
+            position: relative;
+            height: 200px;
+            border-radius: 25px;
+            overflow: hidden;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+        }
+        
+        .deposit-box {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        }
+        
+        .chat-box {
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+        }
+        
+        .action-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+        }
+        
+        .action-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+        
+        .payment-option {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 12px;
+            margin: 8px 0;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        
+        .payment-option:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .payment-icon {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+        
+        .payment-text {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .chat-content {
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.6;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        
+        .chat-content:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Expanded states */
+        .action-box.expanded {
+            flex: 2;
+        }
+        
+        .action-box.expanded .action-content {
+            max-height: 200px;
+            opacity: 1;
+        }
+        
+        .action-box.expanded .action-title {
+            transform: translateY(-20px);
+            font-size: 32px;
+        }
+        
+        .deposit-box.expanded {
+            transform: translateX(-15%);
+        }
+        
+        .chat-box.expanded {
+            transform: translateX(15%);
+        }
+        
+        /* Admin controls */
+        .admin-controls {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(45, 45, 75, 0.5);
+            border-radius: 20px;
+        }
+        
+        .admin-title {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #e0e0ff;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .control-group input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .control-group button {
+            background: #4e54c8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        .control-group button:hover {
+            background: #6a71e6;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .action-container {
+                flex-direction: column;
+            }
+            
+            .action-box {
+                height: 150px;
+            }
+            
+            .deposit-box.expanded, .chat-box.expanded {
+                transform: none;
+                height: 300px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="badge currency pulse">Курс: 12.7</div>
-        <div class="badge balance">Баланс: 888Y</div>
-    </div>
     <div class="container">
-        <div class="card" onclick="navigate('topup')">
-            <div class="card-icon">+</div>
-            <div class="card-content">
-                <div class="card-title">Пополнить счет</div>
-                <div class="card-desc">Быстрое добавление средств</div>
+        <div class="top-bar">
+            <div class="info-box">
+                <div class="info-title">КУРС:</div>
+                <div class="info-value" id="exchange-rate">1 ¥ = 11.5 ₽</div>
             </div>
-            <div class="arrow">→</div>
+            <div class="info-box">
+                <div class="info-title">ВАШ БАЛАНС:</div>
+                <div class="info-value" id="user-balance">1,500.00 ¥</div>
+            </div>
         </div>
-        <div class="card" onclick="navigate('shop')">
-            <div class="card-icon">🛒</div>
-            <div class="card-content">
-                <div class="card-title">Купить предметы</div>
-                <div class="card-desc">Товары и услуги</div>
+        
+        <div class="action-container">
+            <div class="action-box deposit-box" id="deposit-box">
+                <div class="action-title">ПОПОЛНИТЬ</div>
+                <div class="action-content">
+                    <div class="payment-option">
+                        <div class="payment-icon">₽</div>
+                        <div class="payment-text">Пополнить через RUB</div>
+                    </div>
+                    <div class="payment-option">
+                        <div class="payment-icon"><i class="fas fa-coins"></i></div>
+                        <div class="payment-text">Пополнить через USDT</div>
+                    </div>
+                </div>
             </div>
-            <div class="arrow">→</div>
+            
+            <div class="action-box chat-box" id="chat-box">
+                <div class="action-title">В ЧАТ</div>
+                <div class="action-content">
+                    <div class="chat-content">
+                        Перейти в чат с поддержкой <br>и другими пользователями
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-controls">
+            <div class="admin-title">Административные настройки (для демо)</div>
+            <div class="control-group">
+                <input type="number" id="rate-input" step="0.01" min="0" placeholder="Новый курс (RUB за ¥)">
+                <button onclick="updateRate()">Обновить курс</button>
+            </div>
+            <div class="control-group">
+                <input type="number" id="balance-input" step="10" min="0" placeholder="Новый баланс (¥)">
+                <button onclick="updateBalance()">Обновить баланс</button>
+            </div>
         </div>
     </div>
+
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        function navigate(page) {
-            tg.showPopup({
-                title: 'Переход',
-                message: `Открываем раздел: ${page === 'topup' ? 'Пополнение счёта' : 'Магазин'}`,
-                buttons: [{ type: 'ok' }]
-            });
-            setTimeout(() => tg.HapticFeedback.impactOccurred('heavy'), 300);
+        // Elements
+        const depositBox = document.getElementById('deposit-box');
+        const chatBox = document.getElementById('chat-box');
+        const exchangeRate = document.getElementById('exchange-rate');
+        const userBalance = document.getElementById('user-balance');
+        const rateInput = document.getElementById('rate-input');
+        const balanceInput = document.getElementById('balance-input');
+        
+        // Mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Handle box interactions
+        function setupBoxInteraction(box) {
+            let expanded = false;
+            
+            if (isMobile) {
+                // Mobile behavior (double tap)
+                let tapCount = 0;
+                
+                box.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    tapCount++;
+                    
+                    setTimeout(() => {
+                        if (tapCount === 1) {
+                            // Single tap - expand/collapse
+                            expanded = !expanded;
+                            box.classList.toggle('expanded', expanded);
+                            
+                            // Collapse the other box
+                            if (box === depositBox && expanded) {
+                                chatBox.classList.remove('expanded');
+                            } else if (box === chatBox && expanded) {
+                                depositBox.classList.remove('expanded');
+                            }
+                        } else if (tapCount === 2 && expanded) {
+                            // Double tap when expanded - perform action
+                            if (box === depositBox) {
+                                alert('Переход к пополнению баланса...');
+                            } else {
+                                alert('Переход в чат...');
+                            }
+                            
+                            // Collapse after action
+                            box.classList.remove('expanded');
+                            expanded = false;
+                        }
+                        
+                        tapCount = 0;
+                    }, 300);
+                });
+            } else {
+                // Desktop behavior (hover and click)
+                box.addEventListener('mouseenter', function() {
+                    box.classList.add('expanded');
+                    
+                    // Collapse the other box
+                    if (box === depositBox) {
+                        chatBox.classList.remove('expanded');
+                    } else {
+                        depositBox.classList.remove('expanded');
+                    }
+                });
+                
+                box.addEventListener('mouseleave', function() {
+                    if (!box.classList.contains('expanded-permanent')) {
+                        box.classList.remove('expanded');
+                    }
+                });
+                
+                box.addEventListener('click', function() {
+                    if (box.classList.contains('expanded')) {
+                        if (box === depositBox) {
+                            alert('Переход к пополнению баланса...');
+                        } else {
+                            alert('Переход в чат...');
+                        }
+                        
+                        // Collapse after click
+                        box.classList.remove('expanded');
+                    }
+                });
+            }
         }
-        function updateData() {
-            document.querySelector('.currency').textContent = `Курс: ${(Math.random() * 0.5 + 12.5).toFixed(2)}`;
+        
+        // Initialize box interactions
+        setupBoxInteraction(depositBox);
+        setupBoxInteraction(chatBox);
+        
+        // Admin functions
+        function updateRate() {
+            const rate = parseFloat(rateInput.value);
+            if (!isNaN(rate) {
+                exchangeRate.textContent = `1 ¥ = ${rate.toFixed(2)} ₽`;
+                rateInput.value = '';
+                alert(`Курс обновлен: 1 ¥ = ${rate.toFixed(2)} ₽`);
+            } else {
+                alert('Пожалуйста, введите корректное значение курса');
+            }
         }
-        setInterval(updateData, 30000);
+        
+        function updateBalance() {
+            const balance = parseFloat(balanceInput.value);
+            if (!isNaN(balance)) {
+                userBalance.textContent = `${balance.toFixed(2)} ¥`;
+                balanceInput.value = '';
+                alert(`Баланс обновлен: ${balance.toFixed(2)} ¥`);
+            } else {
+                alert('Пожалуйста, введите корректное значение баланса');
+            }
+        }
+        
+        // Initial setup for demo
+        rateInput.placeholder = "Текущий: 11.50";
+        balanceInput.placeholder = "Текущий: 1500.00";
     </script>
 </body>
 </html>
